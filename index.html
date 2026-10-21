@@ -64,7 +64,7 @@ if(u.bomb){u.cool-=dt;if(u.cool<=0){u.cool=3;effects.push({x:u.bomb.x,y:u.bomb.y
 for(const s of sectors){const nearby=units.filter(u=>u.team==='blue'&&u.hp>0&&Math.hypot(u.x-s.x,u.y-s.y)<.065);if(nearby.length&&!s.owner){s.progress=Math.min(1,s.progress+dt*.12);if(s.progress>=1){s.owner=true;cash+=150;money();log('Сектор '+s.name+' захвачен! +150 SM.')}}}
 effects.forEach(e=>e.t+=dt*1.8);effects=effects.filter(e=>e.t<1);
 if(air){air.t+=dt;air.x+=dt*.15;if(air.x>.48){unit('tank',.42,.76);unit('infantry',.45,.78);unit('infantry',.39,.78);air=null;log('Воздушный мост завершён: танк и два отделения доставлены.')}} 
-const blue=units.filter(u=>u.team==='blue'&&u.hp>0).length,red=units.filter(u=>u.team==='red'&&u.hp>0).length;if(!blue){ended=true;$('status').textContent='ПОРАЖЕНИЕ';log('Все подразделения потеряны. Начни новую операцию.')}else if(sectors.every(s=>s.owner)&&red===0){ended=true;$('status').textContent='ПОБЕДА';log('Победа! Рубеж очищен от противника.')}updateUI();}
+const blue=units.filter(u=>u.team==='blue'&&u.hp>0).length,red=units.filter(u=>u.team==='red'&&u.hp>0).length;if(!blue){ended=true;$('status').textContent='ПОРАЖЕНИЕ';log('Все подразделения потеряны. Начни новую операцию.')}else if(sectors.every(s=>s.owner)&&red===0){ended=true;$('status').textContent='ПОБЕДА';log('Победа! Рубеж очищен от противника.')}updateUI();draw();}
 draw();requestAnimationFrame(tick)}
 new ResizeObserver(resize).observe(stage);window.addEventListener('resize',resize);resize();newGame();requestAnimationFrame(tick);
 })();
