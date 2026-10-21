@@ -29,5 +29,56 @@
 </aside></main>
 <footer>FRONTLINE: IRON DIVISION <span>3D PROTOTYPE · THREE.JS · BUILD 0.4</span></footer>
 </div>
-<script type="module" src="game.js"></script>
+<script>
+(function(){
+ const loading=document.getElementById('loading'), root=document.getElementById('gameview');
+ let fallbackStarted=false;
+ function fallback(reason){
+  if(fallbackStarted)return; fallbackStarted=true;
+  if(loading)loading.remove();
+  root.querySelectorAll('canvas').forEach(x=>x.remove());
+  const canvas=document.createElement('canvas');canvas.id='fallback-map';canvas.style.cssText='display:block;width:100%;height:100%;touch-action:none';
+  root.appendChild(canvas);
+  const ctx=canvas.getContext('2d');if(!ctx){root.innerHTML='<div style="padding:24px;color:white">Не удалось запустить графику. Открой страницу в Safari и обнови её.</div>';return}
+  let W=0,H=0,selected=null,mode='move',cash=650,clock=0,last=0;
+  const units=[
+   {x:.25,y:.68,t:'ТАНК',team:'blue',hp:100},{x:.20,y:.73,t:'ПЕХОТА',team:'blue',hp:100},
+   {x:.29,y:.75,t:'ПЕХОТА',team:'blue',hp:100},{x:.17,y:.64,t:'АРТ',team:'blue',hp:100},
+   {x:.33,y:.72,t:'БТР',team:'blue',hp:100},{x:.73,y:.40,t:'ТАНК',team:'red',hp:100},
+   {x:.78,y:.50,t:'ПЕХОТА',team:'red',hp:100},{x:.69,y:.57,t:'ПЕХОТА',team:'red',hp:100}
+  ];
+  const sectors=[{x:.28,y:.43,n:'МОСТ',owner:false},{x:.70,y:.28,n:'ВЫСОТА 204',owner:false}];
+  function resize(){const r=root.getBoundingClientRect();W=Math.max(320,r.width);H=Math.max(320,r.height);const d=Math.min(devicePixelRatio||1,2);canvas.width=W*d;canvas.height=H*d;ctx.setTransform(d,0,0,d,0,0);draw()}
+  function draw(){
+   if(!ctx)return;ctx.clearRect(0,0,W,H);
+   const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#778968');g.addColorStop(1,'#3b503b');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+   // terrain patches, roads, river and bridge
+   for(let i=0;i<70;i++){let x=(i*137.5)%W,y=(i*83.7)%H;ctx.fillStyle=i%2?'#a0aa7a22':'#243c2b22';ctx.beginPath();ctx.ellipse(x,y,18+(i%5)*7,7+(i%4)*4,i*.3,0,Math.PI*2);ctx.fill()}
+   ctx.fillStyle='#55594b';ctx.fillRect(0,H*.37,W,H*.075);
+   ctx.fillStyle='#477d8a';ctx.fillRect(0,H*.49,W,H*.055);
+   ctx.fillStyle='#aaa995';ctx.fillRect(W*.20,H*.455,W*.19,H*.12);
+   ctx.strokeStyle='#a6b29a55';ctx.lineWidth=1;
+   for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+   for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+   // trees
+   for(let i=0;i<46;i++){const x=(i*97+25)%W,y=(i*61+17)%H;if(x>W*.12&&x<W*.39&&y>H*.58&&y<H*.82)continue;ctx.fillStyle='#253d2b';ctx.beginPath();ctx.arc(x,y,4+(i%4),0,Math.PI*2);ctx.fill();ctx.fillStyle='#71845b';ctx.beginPath();ctx.arc(x-2,y-2,3+(i%3),0,Math.PI*2);ctx.fill()}
+   sectors.forEach(s=>{const x=s.x*W,y=s.y*H;ctx.strokeStyle=s.owner?'#68c9ff':'#b6e36b';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,21,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#152016dd';ctx.fillRect(x-38,y-36,76,18);ctx.fillStyle='#fff';ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText(s.n,x,y-24);ctx.strokeStyle=s.owner?'#68c9ff':'#dce6ce';ctx.beginPath();ctx.moveTo(x,y-18);ctx.lineTo(x,y+12);ctx.stroke();ctx.fillStyle=s.owner?'#68c9ff':'#b6e36b';ctx.fillRect(x,y-17,14,9)});
+   units.forEach((u,i)=>{if(u.hp<=0)return;const x=u.x*W,y=u.y*H;ctx.save();ctx.translate(x,y);ctx.fillStyle=u.team==='blue'?'#2c83b9':'#b94a3f';ctx.strokeStyle=selected===u?'#fff':'#182018';ctx.lineWidth=selected===u?3:1.5;
+    if(u.t==='ТАНК'||u.t==='БТР'){ctx.fillRect(-14,-9,28,18);ctx.strokeRect(-14,-9,28,18);ctx.fillStyle='#27372c';ctx.fillRect(-7,-5,14,10);ctx.strokeStyle=u.team==='blue'?'#c3eaff':'#ffd1c8';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-18);ctx.stroke()}
+    else{ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#f3e5c8';ctx.beginPath();ctx.arc(0,-2,3,0,Math.PI*2);ctx.fill()}
+    ctx.fillStyle='#162016';ctx.fillRect(-15,13,30,4);ctx.fillStyle=u.team==='blue'?'#68c9ff':'#ff6b61';ctx.fillRect(-15,13,30*u.hp/100,4);ctx.restore()});
+   ctx.fillStyle='#101710cc';ctx.fillRect(12,12,Math.min(255,W-24),34);ctx.fillStyle='#eaf0e5';ctx.font='bold 12px sans-serif';ctx.textAlign='left';ctx.fillText('ТАКТИЧЕСКАЯ КАРТА · '+mode.toUpperCase(),22,33);
+  }
+  canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;let nearest=null,dist=.04;units.forEach(u=>{if(u.hp<=0)return;const d=Math.hypot(u.x-x,u.y-y);if(d<dist){nearest=u;dist=d}});if(nearest&&nearest.team==='blue'){selected=nearest;document.getElementById('unitstats').textContent=nearest.t+' · HP '+nearest.hp+'/100 · СВОЙ'}else if(selected){if(mode==='attack'&&nearest&&nearest.team==='red'){nearest.hp-=35;if(nearest.hp<=0){cash+=35;document.getElementById('cash').textContent=cash+' сомони'}document.getElementById('log').textContent='[HQ] Атака по цели.'}else if(mode==='capture'){const s=sectors.sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y))[0];s.owner=true;cash+=100;document.getElementById('cash').textContent=cash+' сомони';document.getElementById('objective').textContent='СЕКТОРА: '+sectors.filter(z=>z.owner).length+'/2';document.getElementById('log').textContent='[HQ] Сектор захвачен! +100 сомони.'}else{selected.x=x;selected.y=y;document.getElementById('log').textContent='[HQ] Приказ движения выполнен.'}}draw()});
+  document.querySelectorAll('[data-order]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.order;draw()}));
+  document.querySelectorAll('[data-unit]').forEach(b=>b.addEventListener('click',()=>{const cost={infantry:120,tank:250,artillery:280,apc:180}[b.dataset.unit];if(cash<cost)return;cash-=cost;document.getElementById('cash').textContent=cash+' сомони';units.push({x:.35+Math.random()*.08,y:.75+Math.random()*.08,t:({infantry:'ПЕХОТА',tank:'ТАНК',artillery:'АРТ',apc:'БТР'})[b.dataset.unit],team:'blue',hp:100});draw()}));
+  document.getElementById('airdrop').addEventListener('click',()=>{if(cash<450)return;cash-=450;document.getElementById('cash').textContent=cash+' сомони';units.push({x:.36,y:.75,t:'ТАНК',team:'blue',hp:100},{x:.39,y:.77,t:'ПЕХОТА',team:'blue',hp:100},{x:.33,y:.78,t:'ПЕХОТА',team:'blue',hp:100});document.getElementById('log').textContent='[HQ] Воздушный мост доставил подкрепление.';draw()});
+  document.getElementById('status').textContent='ТАКТИЧЕСКАЯ КАРТА';
+  document.getElementById('log').textContent='[HQ] Резервный режим карты включён: графический модуль 3D не загрузился.';
+  window.addEventListener('resize',resize);resize();
+ }
+ const timer=setTimeout(()=>{if(loading&&loading.isConnected)fallback('timeout')},7000);
+ import('./game.js?v=6').then(()=>clearTimeout(timer)).catch(e=>{console.error('3D engine failed',e);clearTimeout(timer);fallback('import')});
+})();
+</script>
 </body></html>
