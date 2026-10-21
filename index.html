@@ -1,8 +1,33 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#101712"><title>FRONTLINE: Iron Division</title><link rel="stylesheet" href="style.css"></head>
-<body><div class="app"><header><div class="brand"><span class="mark">FD</span><div><b>FRONTLINE</b><small>IRON DIVISION · TACTICAL RTS</small></div></div><div class="topstats"><span>◉ <b id="status">СВЯЗЬ ЕСТЬ</b></span><span>⏱ <b id="clock">00:00</b></span><button id="pause">Ⅱ</button></div></header>
-<main><section class="battle"><div class="mission"><small>ОПЕРАЦИЯ 01 / СЕВЕРНЫЙ РУБЕЖ</small><h1>УДЕРЖАТЬ ПЕРЕПРАВУ</h1><p>Захватите два сектора. Не дайте противнику занять штаб.</p></div><canvas id="map" aria-label="Поле боя. Выберите свои подразделения и отдайте приказ."></canvas><div class="maplegend"><span><i class="blue"></i> ВАШИ</span><span><i class="red"></i> ПРОТИВНИК</span><span>🟡 ЦЕЛЬ</span><span id="unitsCount">ПОДРАЗДЕЛЕНИЯ: 5</span></div><div class="maptools"><button id="zoomOut">−</button><button id="zoomIn">+</button><button id="center">⌖ ЦЕНТР</button></div></section>
-<aside class="side"><section class="panel"><div class="panelhead"><span>КОМАНДОВАНИЕ</span><span class="live">● LIVE</span></div><div class="resource"><div><small>РЕКВИЗИЦИЯ</small><b id="res">650</b></div><div><small>КОНТРОЛЬ СЕКТОРОВ</small><b id="control">0 / 2</b></div></div><div class="orders"><button data-order="move" class="active">↗ <span>Перемещение</span></button><button data-order="attack">◎ <span>Атака</span></button><button data-order="capture">⚑ <span>Захват</span></button><button data-order="bombard">✹ <span>Обстрел</span></button></div><p class="hint" id="hint">Выберите подразделение, затем нажмите на карту для приказа.</p></section>
-<section class="panel"><div class="panelhead">ВАШИ СИЛЫ <span id="selectedLabel">0 выбрано</span></div><div id="roster" class="roster"></div><div class="reinforce"><button data-spawn="infantry">+ ПЕХОТА <b>120</b></button><button data-spawn="tank">+ ТАНК <b>250</b></button><button data-spawn="apc">+ БТР <b>180</b></button><button data-spawn="helicopter">+ ВЕРТОЛЁТ <b>320</b></button><button data-spawn="artillery">+ АРТИЛЛЕРИЯ <b>280</b></button></div></section>
-<section class="panel objectives"><div class="panelhead">ЗАДАЧИ ОПЕРАЦИИ</div><div id="obj1" class="objective">◯ <span><b>Мост «Восточный»</b><small>Захватить сектор</small></span></div><div id="obj2" class="objective">◯ <span><b>Высота 204</b><small>Захватить сектор</small></span></div><div class="objective">▣ <span><b>Штаб дивизии</b><small>Не допустить потери штаба</small></span></div></section>
-<section class="panel log"><div class="panelhead">РАДИОПЕРЕХВАТ <button id="clearLog">ОЧИСТИТЬ</button></div><div id="feed"><p>22:00:01 — Командир, ждём приказов.</p></div></section></aside></main><footer><span>FRONTLINE // FIELD COMMAND SYSTEM</span><span>PROTOTYPE 0.3 · ОГНЕВАЯ ПОДДЕРЖКА</span></footer></div><div id="toast" role="status"></div><script src="game.js"></script></body></html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101712"><title>FRONTLINE: Iron Division — 3D Tactical RTS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+<header><div class="brand"><span class="mark">FD</span><div><b>FRONTLINE</b><small>IRON DIVISION · 3D TACTICAL RTS</small></div></div>
+<div class="topstats"><span>● <b id="status">СВЯЗЬ ЕСТЬ</b></span><span>⏱ <b id="clock">00:00</b></span><button id="pause">Ⅱ ПАУЗА</button></div></header>
+<main>
+<section class="battle">
+<div class="mission"><small>ОПЕРАЦИЯ 01 / СЕВЕРНЫЙ РУБЕЖ</small><h1>УДЕРЖАТЬ ПЕРЕПРАВУ</h1><p>3D-полигон боя. Выбирай подразделения и отдавай приказы.</p></div>
+<div id="gameview"><div id="loading">ЗАГРУЗКА 3D-ПОЛЯ БОЯ…</div><div class="crosshair">+</div><div class="viewhelp">ЛКМ — выбрать · ПКМ/тап — приказ · колесо — масштаб</div></div>
+<div class="maplegend"><span><i class="dot blue"></i> СВОИ</span><span><i class="dot red"></i> ПРОТИВНИК</span><span><i class="dot green"></i> СЕКТОР</span><span id="objective">СЕКТОРА: 0/2</span></div>
+</section>
+<aside class="control">
+<section class="panel"><div class="panelhead">КОМАНДОВАНИЕ <span id="selectedCount">0 выбрано</span></div><div class="commandgrid"><button data-order="move" class="active">➤ Движение</button><button data-order="attack">✚ Атака</button><button data-order="capture">⚑ Захват</button><button data-order="bombard">✹ Обстрел</button></div><p class="hint" id="hint">Выбери юнит, затем точку на поле.</p></section>
+<section class="panel"><div class="panelhead">ПОДКРЕПЛЕНИЯ <span id="cash">650 сомони</span></div><div class="roster">
+<button data-unit="infantry"><b>♟ Мотопехота</b><span>120 SM</span><small>Быстрая, дешёвая пехота</small></button>
+<button data-unit="tank"><b>▰ Основной танк</b><span>250 SM</span><small>Броня и прямой бой</small></button>
+<button data-unit="artillery"><b>✹ Артиллерия</b><span>280 SM</span><small>Дальний удар по площади</small></button>
+<button data-unit="apc"><b>▱ БТР</b><span>180 SM</span><small>Бронетранспортёр поддержки</small></button>
+</div><button id="airdrop" class="airdrop"><span class="plane">✈</span><span><b>ВОЗДУШНЫЙ МОСТ</b><small>Тяжёлый транспортный самолёт доставит подкрепление</small></span><strong>450 SM</strong></button>
+<div class="airnote">Самолёт пролетает над картой и высаживает танк + пехоту. За потерянные юниты начисляются очки снабжения.</div></section>
+<section class="panel"><div class="panelhead">СОСТОЯНИЕ ОТРЯДА</div><div id="unitstats">Подразделение не выбрано</div><div class="economy"><span>Очки снабжения за потери</span><b>+35 SM / юнит</b></div><div class="economy"><span>Счёт подкреплений</span><b id="lossPoints">0 очков</b></div></section>
+<section class="panel"><div class="panelhead">РАДИОСВЯЗЬ</div><div id="log" class="log">[HQ] Командир, ждём ваших приказов.</div></section>
+</aside></main>
+<footer>FRONTLINE: IRON DIVISION <span>3D PROTOTYPE · THREE.JS · BUILD 0.4</span></footer>
+</div>
+<script type="module" src="game.js"></script>
+</body></html>
